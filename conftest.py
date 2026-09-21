@@ -1,7 +1,7 @@
 import pytest
 import requests
+import uuid
 from faker import Faker
-import allure
 
 fake = Faker()
 
@@ -15,81 +15,55 @@ def base_url():
 
 @pytest.fixture
 def random_user_data():
-    """Генерирует случайные данные пользователя"""
+    """Уникальные данные пользователя."""
+    unique = uuid.uuid4().hex[:8]
     return {
-        "email": fake.email(),
-        "password": fake.password(length=10, special_chars=False),
-        "name": fake.name()
+        "email": f"test_{unique}@example.com",
+        "password": "TestPass123!",
+        "name": f"Test User {unique}"
     }
 
 
 @pytest.fixture
 def registered_user(random_user_data):
-    """Создает и возвращает зарегистрированного пользователя"""
+    """Создаёт пользователя и удаляет его (через logout) после теста."""
     response = requests.post(
         f"{BASE_URL}/auth/register",
         json=random_user_data
     )
-
-    if response.status_code == 200:
-        data = response.json()
-        data['user_data'] = random_user_data
-        return data
-    else:
-        # Если не удалось создать пользователя, возвращаем None
-        # и выводим информацию об ошибке
-        print(f"Failed to create user: {response.status_code} - {response.text}")
-        return None
+    assert response.status_code == 200, \
+        f"Не удалось создать пользователя: {response.text}"
+    
+    data = response.json()
+    data['user_data'] = random_user_data
+    
+    yield data
+    
+    # Teardown — logout
+    refresh_token = data.get('refreshToken')
+    if refresh_token:
+        try:
+            requests.post(
+                f"{BASE_URL}/auth/logout",
+                json={"token": refresh_token}
+            )
+        except Exception:
+            pass
 
 
 @pytest.fixture
 def auth_token(registered_user):
-    """Возвращает токен авторизации"""
-    if registered_user and 'accessToken' in registered_user:
-        return registered_user['accessToken']
-    return None
+    """Возвращает accessToken зарегистрированного пользователя."""
+    return registered_user['accessToken']
 
 
 @pytest.fixture
 def ingredient_ids():
-    """Возвращает список ID ингредиентов для заказа"""
-    try:
-        response = requests.get(f"{BASE_URL}/ingredients")
-        if response.status_code == 200:
-            data = response.json()
-            if data.get('success') and 'data' in data:
-                ingredients = data['data'][:2]
-                return [ing['_id'] for ing in ingredients if '_id' in ing]
-    except Exception as e:
-        print(f"Error getting ingredients: {e}")
-
-    # Fallback IDs из документации
-    return ["60d3b41abdacab0026a733c6", "609646e4dc916e00276b2870"]
-
-
-@pytest.fixture
-def created_user_with_cleanup(random_user_data):
-    """Создает пользователя и автоматически удаляет его после теста"""
-    response = requests.post(
-        f"{BASE_URL}/auth/register",
-        json=random_user_data
-    )
-
-    user_data = None
+    """Возвращает список ID ингредиентов."""
+    response = requests.get(f"{BASE_URL}/ingredients")
     if response.status_code == 200:
         data = response.json()
-        data['user_data'] = random_user_data
-        user_data = data
-
-    yield user_data
-
-    # Очистка после теста (если есть API для удаления пользователя)
-    if user_data and 'refreshToken' in user_data:
-        try:
-            # Выход из системы
-            requests.post(
-                f"{BASE_URL}/auth/logout",
-                json={"token": user_data['refreshToken']}
-            )
-        except:
-            pass
+        if data.get('success') and 'data' in data:
+            ingredients = data['data'][:2]
+            return [ing['_id'] for ing in ingredients if '_id' in ing]
+    return ["60d3b41abdacab0026a733c6", "609646e4dc916e00276b2870"]
