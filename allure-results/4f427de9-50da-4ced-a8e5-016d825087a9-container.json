@@ -1,0 +1,1 @@
+{"uuid": "aba67b45-370d-4adf-8d02-3102d84cc289", "children": ["bfa1326e-0cb5-4c00-b0bf-e7f66541f9f7"], "befores": [{"name": "faker_seed", "status": "passed", "start": 1790283619934, "stop": 1790283619934}], "afters": [{"name": "faker_seed::<lambda>", "start": 1790283620159}], "start": 1790283619934, "stop": 1790283620159}
