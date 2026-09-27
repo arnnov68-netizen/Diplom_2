@@ -1,8 +1,6 @@
 import uuid
 
-import requests
-
-from data.config import BASE_URL
+from helpers.api_helpers import create_user
 
 
 def generate_user_data():
@@ -17,17 +15,19 @@ def generate_user_data():
 
 def register_user(user_data=None):
     """Регистрирует пользователя через API.
+
+    Использует хелпер create_user из api_helpers (запрос виден в Allure).
     Возвращает полный ответ регистрации + user_data.
     Бросает RuntimeError, если регистрация не удалась.
     """
     if user_data is None:
         user_data = generate_user_data()
 
-    response = requests.post(f"{BASE_URL}/auth/register", json=user_data)
+    response = create_user(user_data)
 
     if response.status_code == 403:
         user_data = generate_user_data()
-        response = requests.post(f"{BASE_URL}/auth/register", json=user_data)
+        response = create_user(user_data)
 
     if response.status_code != 200:
         raise RuntimeError(
