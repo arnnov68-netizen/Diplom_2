@@ -1,5 +1,4 @@
 import allure
-import pytest
 from helpers.api_helpers import create_order
 from data.test_data import TestData
 

@@ -14,14 +14,10 @@ def login_user(login_data):
     return requests.post(f"{BASE_URL}/auth/login", json=login_data)
 
 
-@allure.step("POST /auth/logout — выход из системы")
-def logout_user(refresh_token):
-    return requests.post(f"{BASE_URL}/auth/logout", json={"token": refresh_token})
-
-
-@allure.step("POST /auth/token — обновление токена")
-def refresh_token(token):
-    return requests.post(f"{BASE_URL}/auth/token", json={"token": token})
+@allure.step("DELETE /auth/user — удаление пользователя")
+def delete_user(access_token):
+    headers = {"Authorization": access_token}
+    return requests.delete(f"{BASE_URL}/auth/user", headers=headers)
 
 
 @allure.step("POST /orders — создание заказа")

@@ -1,6 +1,6 @@
 import pytest
 
-from helpers.api_helpers import get_ingredients, logout_user
+from helpers.api_helpers import delete_user, get_ingredients
 from helpers.user_helpers import generate_user_data, register_user
 
 
@@ -12,15 +12,15 @@ def random_user_data():
 
 @pytest.fixture
 def registered_user(random_user_data):
-    """Регистрирует пользователя и выполняет logout после теста."""
+    """Регистрирует пользователя и удаляет его после теста."""
     data = register_user(random_user_data)
 
     yield data
 
-    refresh = data.get('refreshToken')
-    if refresh:
+    access = data.get('accessToken')
+    if access:
         try:
-            logout_user(refresh)
+            delete_user(access)
         except Exception:
             pass
 
