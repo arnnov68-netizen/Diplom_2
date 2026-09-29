@@ -12,13 +12,18 @@ class TestCreateUser:
     @allure.title("Создание уникального пользователя")
     @allure.description("Проверка успешного создания нового пользователя с уникальными данными")
     @allure.severity(allure.severity_level.CRITICAL)
-    def test_create_unique_user(self, random_user_data):
+    def test_create_unique_user(self, random_user_data, cleanup_users):
         response = create_user(random_user_data)
 
         with allure.step("Проверка статуса ответа 200"):
             assert response.status_code == 200, f"Ожидался статус 200, получен {response.status_code}"
 
         data = response.json()
+
+        # Регистрируем токен на уборку сразу после успешного создания,
+        # чтобы пользователь был удалён, даже если дальнейшие проверки упадут.
+        cleanup_users.append(data['accessToken'])
+
         with allure.step("Проверка структуры ответа"):
             assert data['success'] is True
             assert 'accessToken' in data, "Отсутствует accessToken"

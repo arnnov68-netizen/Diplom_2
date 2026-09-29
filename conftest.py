@@ -1,3 +1,4 @@
+# conftest.py
 import pytest
 
 from helpers.api_helpers import delete_user, get_ingredients
@@ -39,3 +40,22 @@ def ingredient_ids():
         if data.get('success') and data.get('data'):
             return [ing['_id'] for ing in data['data'][:2] if '_id' in ing]
     return ["60d3b41abdacab0026a733c6", "609646e4dc916e00276b2870"]
+
+
+@pytest.fixture
+def cleanup_users():
+    """Собирает токены созданных в тесте пользователей и удаляет их после.
+
+    Использование в тесте:
+        def test_...(..., cleanup_users):
+            response = create_user(...)
+            cleanup_users.append(response.json()['accessToken'])
+    """
+    tokens = []
+    yield tokens
+
+    for token in tokens:
+        try:
+            delete_user(token)
+        except Exception:
+            pass
