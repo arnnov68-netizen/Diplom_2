@@ -1,4 +1,6 @@
-pytest==7.4.3
+# Зафиксированный снимок рабочего окружения (18/18 тестов проходят).
+pytest==9.1.1
 requests==2.31.0
-allure-pytest==2.13.5
-Faker==40.39.0
+allure-pytest==2.16.0
+Faker==40.38.0
+pytest-randomly==5.0.0

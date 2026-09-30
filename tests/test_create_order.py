@@ -7,7 +7,7 @@ from data.test_data import TestData
 @allure.feature("Создание заказа")
 class TestCreateOrder:
 
-    @allure.story("Авторизованные заказы")
+    @allure.story("Успешные заказы")
     @allure.title("Создание заказа авторизованным пользователем")
     @allure.description("Проверка создания заказа авторизованным пользователем с корректными ингредиентами")
     @allure.severity(allure.severity_level.CRITICAL)
@@ -43,7 +43,7 @@ class TestCreateOrder:
             assert 'number' in data['order']
             assert data['order']['number'] > 0
 
-    @allure.story("Ошибки создания заказа")
+    @allure.story("Ошибки")
     @allure.title("Создание заказа без ингредиентов")
     @allure.description("Проверка, что при создании заказа без ингредиентов возвращается ошибка 400")
     @allure.severity(allure.severity_level.CRITICAL)
@@ -58,7 +58,7 @@ class TestCreateOrder:
             assert data['success'] is False
             assert data['message'] == TestData.ERROR_MESSAGES['INGREDIENTS_REQUIRED']
 
-    @allure.story("Ошибки создания заказа")
+    @allure.story("Ошибки")
     @allure.title("Создание заказа с невалидным хешем ингредиента")
     @allure.description("Проверка, что при передаче невалидного хеша возвращается ошибка 500")
     @allure.severity(allure.severity_level.CRITICAL)
@@ -69,7 +69,13 @@ class TestCreateOrder:
         with allure.step("Проверка статуса ответа 500"):
             assert response.status_code == 500, f"Ожидался статус 500, получен {response.status_code}"
 
-    @allure.story("Ошибки создания заказа")
+        with allure.step("Проверка текста ответа"):
+            assert TestData.INTERNAL_SERVER_ERROR_MARKER in response.text, (
+                f"Ожидался маркер '{TestData.INTERNAL_SERVER_ERROR_MARKER}' в теле ответа, "
+                f"получено: {response.text[:200]!r}"
+            )
+
+    @allure.story("Ошибки")
     @allure.title("Создание заказа с частично неверным хешем")
     @allure.description("Проверка, что при наличии хотя бы одного невалидного хеша возвращается ошибка")
     @allure.severity(allure.severity_level.NORMAL)
@@ -80,7 +86,13 @@ class TestCreateOrder:
         with allure.step("Проверка статуса ответа 500"):
             assert response.status_code == 500, f"Ожидался статус 500, получен {response.status_code}"
 
-    @allure.story("Ошибки создания заказа")
+        with allure.step("Проверка текста ответа"):
+            assert TestData.INTERNAL_SERVER_ERROR_MARKER in response.text, (
+                f"Ожидался маркер '{TestData.INTERNAL_SERVER_ERROR_MARKER}' в теле ответа, "
+                f"получено: {response.text[:200]!r}"
+            )
+
+    @allure.story("Ошибки")
     @allure.title("Создание заказа с неверным токеном авторизации")
     @allure.description("Проверка, что при неверном токене авторизации заказ не создается")
     @allure.severity(allure.severity_level.NORMAL)
@@ -91,7 +103,14 @@ class TestCreateOrder:
         with allure.step("Проверка статуса ответа 401 или 403"):
             assert response.status_code in [401, 403], f"Ожидался статус 401 или 403, получен {response.status_code}"
 
-    @allure.story("Создание заказа")
+        data = response.json()
+        with allure.step("Проверка тела ответа"):
+            assert data['success'] is False, "success должен быть False"
+            assert data.get('message'), (
+                f"Ожидалось непустое сообщение об ошибке, получено: {data.get('message')!r}"
+            )
+
+    @allure.story("Успешные заказы")
     @allure.title("Создание нескольких заказов подряд")
     @allure.description("Проверка возможности создания нескольких заказов")
     @allure.severity(allure.severity_level.MINOR)

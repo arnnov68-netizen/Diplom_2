@@ -4,6 +4,14 @@ from helpers.api_helpers import create_user
 from data.test_data import TestData
 
 
+# Человекочитаемые подписи для параметризованного теста.
+MISSING_FIELD_LABELS = {
+    'email': 'без email',
+    'password': 'без password',
+    'name': 'без name',
+}
+
+
 @allure.epic("Пользователь")
 @allure.feature("Создание пользователя")
 class TestCreateUser:
@@ -37,7 +45,7 @@ class TestCreateUser:
             assert data['accessToken'].startswith('Bearer '), "Неверный формат accessToken"
             assert len(data['refreshToken']) > 0, "refreshToken пустой"
 
-    @allure.story("Ошибки создания")
+    @allure.story("Ошибки")
     @allure.title("Создание существующего пользователя")
     @allure.description("Проверка, что при попытке создать существующего пользователя возвращается ошибка 403")
     @allure.severity(allure.severity_level.NORMAL)
@@ -53,16 +61,17 @@ class TestCreateUser:
             assert data['success'] is False
             assert data['message'] == TestData.ERROR_MESSAGES['USER_EXISTS']
 
-    @allure.story("Ошибки создания")
+    @allure.story("Ошибки")
     @allure.title("Создание пользователя без обязательных полей")
     @allure.description("Проверка, что при отсутствии обязательных полей возвращается ошибка 403")
     @allure.severity(allure.severity_level.CRITICAL)
-    @pytest.mark.parametrize("missing_field", [
-        'email',
-        'password',
-        'name'
-    ], ids=["без email", "без password", "без name"])
+    @pytest.mark.parametrize("missing_field", ['email', 'password', 'name'])
     def test_create_user_missing_fields(self, random_user_data, missing_field):
+        # Allure: переопределяем заголовок уже в рантайме,
+        # чтобы pytest-randomly не мог его перетереть.
+        label = MISSING_FIELD_LABELS[missing_field]
+        allure.dynamic.title(f"Создание пользователя без обязательных полей ({label})")
+
         invalid_data = random_user_data.copy()
         invalid_data.pop(missing_field)
 
@@ -76,7 +85,7 @@ class TestCreateUser:
             assert data['success'] is False
             assert data['message'] == TestData.ERROR_MESSAGES['REQUIRED_FIELDS']
 
-    @allure.story("Ошибки создания")
+    @allure.story("Ошибки")
     @allure.title("Создание пользователя с пустыми полями")
     @allure.description("Проверка, что при пустых обязательных полях возвращается ошибка")
     @allure.severity(allure.severity_level.MINOR)
@@ -89,4 +98,12 @@ class TestCreateUser:
         response = create_user(user_data)
 
         with allure.step("Проверка статуса ответа 403"):
-            assert response.status_code == 403
+            assert response.status_code == 403, f"Ожидался статус 403, получен {response.status_code}"
+
+        data = response.json()
+        with allure.step("Проверка тела ответа"):
+            assert data['success'] is False, "success должен быть False"
+            assert data['message'] == TestData.ERROR_MESSAGES['REQUIRED_FIELDS'], (
+                f"Ожидалось сообщение '{TestData.ERROR_MESSAGES['REQUIRED_FIELDS']}', "
+                f"получено '{data.get('message')}'"
+            )

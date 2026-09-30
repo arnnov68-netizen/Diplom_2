@@ -1,10 +1,23 @@
+# Python
 __pycache__/
 *.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+
+# Virtual environments
 .venv/
 venv/
 env/
-.pytest_cache/
+
+# Allure report (генерируется из allure-results командой `allure generate`)
+allure-report/
+
+# IDE
 .idea/
 .vscode/
-*.log
-allure-report/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

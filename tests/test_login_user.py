@@ -35,7 +35,7 @@ class TestLoginUser:
         with allure.step("Проверка формата токена"):
             assert data['accessToken'].startswith('Bearer '), "Неверный формат accessToken"
 
-    @allure.story("Ошибки входа")
+    @allure.story("Ошибки")
     @allure.title("Вход с неверным логином")
     @allure.description("Проверка, что при неверном логине возвращается ошибка 401")
     @allure.severity(allure.severity_level.CRITICAL)
@@ -59,7 +59,7 @@ class TestLoginUser:
                 TestData.ERROR_MESSAGES['INCORRECT_CREDENTIALS']
             ]
 
-    @allure.story("Ошибки входа")
+    @allure.story("Ошибки")
     @allure.title("Вход с неверным паролем")
     @allure.description("Проверка, что при неверном пароле возвращается ошибка 401")
     @allure.severity(allure.severity_level.CRITICAL)
@@ -83,7 +83,7 @@ class TestLoginUser:
                 TestData.ERROR_MESSAGES['INCORRECT_CREDENTIALS']
             ]
 
-    @allure.story("Ошибки входа")
+    @allure.story("Ошибки")
     @allure.title("Вход без пароля")
     @allure.description("Проверка, что при отсутствии пароля возвращается ошибка")
     @allure.severity(allure.severity_level.NORMAL)
@@ -98,7 +98,15 @@ class TestLoginUser:
         with allure.step("Проверка статуса ответа 401"):
             assert response.status_code == 401, f"Ожидался статус 401, получен {response.status_code}"
 
-    @allure.story("Ошибки входа")
+        data = response.json()
+        with allure.step("Проверка тела ответа"):
+            assert data['success'] is False, "success должен быть False"
+            assert data['message'] in [
+                TestData.ERROR_MESSAGES['LOGIN_FAILED'],
+                TestData.ERROR_MESSAGES['INCORRECT_CREDENTIALS']
+            ], f"Неожиданное сообщение об ошибке: '{data.get('message')}'"
+
+    @allure.story("Ошибки")
     @allure.title("Вход несуществующего пользователя")
     @allure.description("Проверка, что при входе несуществующего пользователя возвращается ошибка")
     @allure.severity(allure.severity_level.NORMAL)
